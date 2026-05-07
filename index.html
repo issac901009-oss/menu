@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今晚吃什么？</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8f6f3;
+      color: #2c2c2c;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    html {
+      height: -webkit-fill-available;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      padding: 40px env(safe-area-inset-right, 20px) 40px env(safe-area-inset-left, 20px);
+    }
+
+    /* ===== 头部 ===== */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    header .title-group {
+      text-align: left;
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: #1a1a1a;
+    }
+
+    header p {
+      font-size: 14px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .admin-toggle {
+      font-size: 13px;
+      padding: 6px 16px;
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      background: #fff;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .admin-toggle:hover { border-color: #e67e22; color: #e67e22; }
+    .admin-toggle.active { background: #e67e22; border-color: #e67e22; color: #fff; }
+
+    /* ===== 管理面板 ===== */
+    .admin-panel {
+      display: none;
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .admin-panel.open { display: block; }
+
+    .admin-panel h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #1a1a1a;
+    }
+
+    .admin-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .admin-form input, .admin-form select {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fafafa;
+      outline: none;
+      transition: border 0.15s;
+    }
+
+    .admin-form input:focus, .admin-form select:focus { border-color: #e67e22; background: #fff; }
+
+    .admin-form input { flex: 1; min-width: 120px; }
+    .admin-form .emoji-input { flex: 0 0 70px; text-align: center; }
+    .admin-form select { flex: 0 0 100px; }
+
+    .admin-form .add-btn {
+      padding: 8px 20px;
+      background: #e67e22;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .admin-form .add-btn:hover { background: #cf6d17; }
+
+    .admin-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .admin-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .admin-row .emoji { font-size: 24px; width: 32px; text-align: center; }
+    .admin-row .name { flex: 1; font-size: 14px; font-weight: 500; }
+    .admin-row .tags { display: flex; gap: 4px; }
+    .admin-row .tag {
+      font-size: 10px;
+      padding: 1px 8px;
+      border-radius: 6px;
+      color: #fff;
+    }
+    .admin-row .del-btn {
+      padding: 4px 10px;
+      border: none;
+      border-radius: 6px;
+      background: #fee;
+      color: #c0392b;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .admin-row .del-btn:hover { background: #fdd; }
+
+    .admin-empty {
+      text-align: center;
+      color: #ccc;
+      font-size: 14px;
+      padding: 20px 0;
+    }
+
+    /* ===== 随机选择 ===== */
+    .roulette-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      text-align: center;
+    }
+
+    .roulette-section .hint {
+      font-size: 13px;
+      color: #bbb;
+      margin-bottom: 20px;
+    }
+
+    .roulette-cards {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .roulette-card {
+      flex: 1;
+      max-width: 180px;
+      padding: 20px 12px;
+      border-radius: 14px;
+      background: #fef9f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+      border: 1.5px solid transparent;
+      position: relative;
+    }
+
+    .roulette-card .remove-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0,0,0,0.06);
+      color: #999;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .roulette-card:hover .remove-btn { display: flex; }
+    .roulette-card .remove-btn:hover { background: #e74c3c; color: #fff; }
+
+    .roulette-card.highlight {
+      border-color: #e67e22;
+      background: #fff6ed;
+    }
+
+    .roulette-card .emoji {
+      font-size: 40px;
+      line-height: 1;
+    }
+
+    .roulette-card .dish-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e67e22;
+    }
+
+    .roulette-card .veggie-badge {
+      font-size: 11px;
+      background: #27ae60;
+      color: #fff;
+      padding: 1px 10px;
+      border-radius: 8px;
+    }
+
+    .roulette-placeholder {
+      color: #ddd;
+      font-size: 14px;
+      padding: 36px 0;
+    }
+
+    .roulette-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 32px;
+      background: #e67e22;
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .roulette-btn:hover { background: #cf6d17; }
+    .roulette-btn:active { transform: scale(0.97); }
+
+    .roulette-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .roulette-actions .roulette-btn {
+      margin-top: 0;
+    }
+
+    .roulette-confirm-btn {
+      padding: 8px 20px;
+      background: #fff;
+      color: #e67e22;
+      border: 1.5px solid #e67e22;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .roulette-confirm-btn:hover { background: #e67e22; color: #fff; }
+
+    /* ===== 筛选 ===== */
+    .filters {
+      position: sticky;
+      top: 0;
+      top: env(safe-area-inset-top, 0);
+      z-index: 10;
+      background: #f8f6f3;
+      padding: 12px 0;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tag {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      border: 1px solid #e0e0e0;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .filter-tag:hover { border-color: #bbb; }
+
+    .filter-tag.active {
+      background: #2c2c2c;
+      border-color: #2c2c2c;
+      color: #fff;
+    }
+
+    /* ===== 菜单列表 ===== */
+    .menu-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .menu-item:hover {
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      transform: translateY(-1px);
+    }
+
+    .menu-item .dish-emoji {
+      font-size: 32px;
+      width: 48px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .menu-item .dish-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .menu-item .dish-name {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .menu-item .dish-tags {
+      display: flex;
+      gap: 5px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .menu-item .tag {
+      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 8px;
+      color: #fff;
+    }
+
+    .tag-肉类 { background: #e74c3c; }
+    .tag-蔬菜 { background: #27ae60; }
+    .tag-海鲜 { background: #2980b9; }
+    .tag-主食 { background: #8e44ad; }
+    .tag-汤类  { background: #16a085; }
+    .tag-凉菜 { background: #d35400; }
+    .tag-快手 { background: #7f8c8d; }
+    .tag-费时 { background: #c0392b; }
+    .tag-辣   { background: #e74c3c; }
+    .tag-不辣 { background: #95a5a6; }
+
+    .menu-item .select-btn {
+      padding: 5px 14px;
+      border: 1px solid #e0e0e0;
+      border-radius: 14px;
+      background: #fff;
+      font-size: 13px;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .menu-item .select-btn:hover { border-color: #e67e22; color: #e67e22; }
+
+    .menu-item .select-btn.selected {
+      background: #e67e22;
+      border-color: #e67e22;
+      color: #fff;
+    }
+
+    /* ===== 购物车按钮 ===== */
+    .cart-fab {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #e67e22;
+      color: #fff;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(230,126,34,0.4);
+      z-index: 90;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cart-fab:active { transform: scale(0.92); }
+    .cart-fab.show { display: flex; }
+
+    .cart-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #e74c3c;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== 遮罩 ===== */
+    .cart-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 98;
+      opacity: 0;
+      transition: opacity 0.25s;
+      pointer-events: none;
+    }
+    .cart-overlay.open { opacity: 1; pointer-events: auto; }
+
+    /* ===== 底部面板 ===== */
+    .cart-panel {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-height: 55vh;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      z-index: 99;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      padding: 20px 24px;
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      flex-direction: column;
+    }
+    .cart-panel.open { transform: translateY(0); }
+
+    .cart-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .cart-panel-header .title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .cart-panel-header .close-btn {
+      border: none;
+      background: none;
+      font-size: 22px;
+      color: #999;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .cart-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #fafafa;
+      border-radius: 12px;
+    }
+    .cart-item .emoji { font-size: 24px; }
+    .cart-item .name { flex: 1; font-size: 15px; font-weight: 500; }
+    .cart-item .del-item-btn {
+      padding: 4px 10px;
+      border: none;
+      border-radius: 6px;
+      background: #fee;
+      color: #c0392b;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .cart-empty {
+      text-align: center;
+      color: #ccc;
+      font-size: 14px;
+      padding: 30px 0;
+    }
+
+    .cart-panel .save-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 12px;
+      background: #e67e22;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .cart-panel .save-btn:hover { background: #cf6d17; }
+    .cart-panel .save-btn:active { transform: scale(0.98); }
+
+    .clear-btn {
+      padding: 6px 20px;
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      background: #fff;
+      font-size: 13px;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .clear-btn:hover { border-color: #e67e22; color: #e67e22; }
+
+    /* ===== 已记录菜单 ===== */
+
+    .saved-meal {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .saved-meal:last-child { border-bottom: none; }
+
+    .saved-meal .meal-dishes {
+      flex: 1;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .saved-meal .meal-dishes .item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+    }
+
+    .saved-meal .meal-dishes .item .emoji { font-size: 18px; }
+
+    .saved-meal .meal-time {
+      font-size: 11px;
+      color: #ccc;
+      white-space: nowrap;
+    }
+
+    .saved-meal .del-meal-btn {
+      font-size: 14px;
+      color: #ddd;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+
+    .saved-meal .del-meal-btn:hover { color: #e74c3c; background: #fee; }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2c2c2c;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 20px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .toast.show { opacity: 1; }
+
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      font-size: 12px;
+      color: #ddd;
+    }
+
+    /* ===== iPhone / 移动端适配 ===== */
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px 16px;
+      }
+
+      header {
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+
+      header h1 {
+        font-size: 22px;
+      }
+
+      header p {
+        font-size: 12px;
+      }
+
+      .admin-toggle {
+        font-size: 12px;
+        padding: 5px 12px;
+      }
+
+      /* 随机卡片：竖排 */
+      .roulette-cards {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .roulette-card {
+        max-width: 200px;
+        width: 100%;
+        padding: 14px 12px;
+        flex-direction: row;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .roulette-card .emoji {
+        font-size: 28px;
+      }
+
+      .roulette-card .dish-name {
+        font-size: 14px;
+      }
+
+      .roulette-section {
+        padding: 24px 16px;
+      }
+
+      .roulette-section .hint {
+        font-size: 12px;
+        margin-bottom: 14px;
+      }
+
+      .roulette-btn {
+        font-size: 14px;
+        padding: 8px 24px;
+        margin-top: 14px;
+      }
+
+      /* 筛选标签 */
+      .filters {
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+
+      .filter-tag {
+        font-size: 12px;
+        padding: 5px 12px;
+      }
+
+      /* 菜单项 */
+      .menu-item {
+        padding: 12px 14px;
+        gap: 12px;
+      }
+
+      .menu-item .dish-emoji {
+        font-size: 26px;
+        width: 36px;
+      }
+
+      .menu-item .dish-name {
+        font-size: 14px;
+      }
+
+      .menu-item .tag {
+        font-size: 10px;
+        padding: 1px 6px;
+      }
+
+      .menu-item .select-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+        min-height: 36px;
+      }
+
+      .filter-tag {
+        padding: 7px 14px;
+        min-height: 36px;
+      }
+
+      .clear-btn {
+        font-size: 12px;
+        padding: 5px 16px;
+      }
+
+      /* 管理表单 */
+      .admin-form {
+        flex-direction: column;
+      }
+
+      .admin-form input {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .admin-form .emoji-input {
+        flex: 0 0 auto;
+        width: 60px;
+        align-self: flex-start;
+      }
+
+      .admin-form select {
+        flex: 1;
+        width: 100%;
+      }
+
+      .admin-form .add-btn {
+        width: 100%;
+        padding: 10px;
+      }
+
+      .admin-row {
+        padding: 8px 10px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .admin-row .name {
+        font-size: 13px;
+        min-width: 0;
+      }
+
+      /* 保存记录 */
+      .saved-meal {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .saved-meal .meal-dishes {
+        gap: 8px;
+      }
+
+      .saved-meal .meal-dishes .item {
+        font-size: 13px;
+      }
+
+      .saved-meal .meal-time {
+        font-size: 10px;
+      }
+
+      /* 整页视图标题 */
+      #savedView > div:first-child,
+      #adminView > div:first-child {
+        flex-wrap: wrap;
+      }
+
+      #savedView > div:first-child span,
+      #adminView > div:first-child span {
+        font-size: 16px !important;
+      }
+
+      footer {
+        margin-top: 32px;
+        font-size: 11px;
+      }
+
+      .cart-fab {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 22px;
+      }
+
+      .cart-panel {
+        padding: 16px 16px;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        max-height: 65vh;
+      }
+    }
+
+    /* 小屏 iPhone SE / 375px 以下 */
+    @media (max-width: 380px) {
+      .container {
+        padding: 16px 12px;
+      }
+
+      header h1 {
+        font-size: 18px;
+      }
+
+      .roulette-card {
+        max-width: 100%;
+        padding: 12px 10px;
+      }
+
+      .menu-item {
+        padding: 10px 12px;
+        gap: 8px;
+      }
+
+      .menu-item .dish-emoji {
+        font-size: 22px;
+        width: 30px;
+      }
+
+      .filter-tag {
+        font-size: 11px;
+        padding: 4px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- ===== 主界面 ===== -->
+    <div id="mainView">
+
+    <header>
+      <div class="title-group">
+        <h1>🍽️ 今晚吃什么？</h1>
+        <p>点一点，选出今晚的家宴</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="admin-toggle" id="savedToggle">📋 记录</button>
+        <button class="admin-toggle" id="adminToggle">⚙️ 管理</button>
+      </div>
+    </header>
+
+    <!-- 随机选择 -->
+    <div class="roulette-section">
+      <div class="hint">🎲 帮你搭配一桌，至少一道素菜</div>
+      <div class="roulette-cards" id="rouletteCards">
+        <div class="roulette-placeholder">点下方按钮<br>随机搭配 3 道菜</div>
+      </div>
+      <div class="roulette-actions">
+        <button class="roulette-btn" id="rouletteBtn">🎲 随机搭配</button>
+        <button class="roulette-confirm-btn" id="confirmRouletteBtn" style="display:none">✅ 就做这些</button>
+      </div>
+    </div>
+
+    <!-- 筛选 -->
+    <div class="filters" id="filters"></div>
+
+    <!-- 菜单列表 -->
+    <div class="menu-list" id="menuList"></div>
+
+    <footer>— 祝大家用餐愉快 —</footer>
+
+    </div><!-- /mainView -->
+
+    <!-- ===== 记录视图（整页） ===== -->
+    <div id="savedView" style="display:none;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <button id="backFromSaved" class="admin-toggle">← 返回</button>
+        <span style="font-size:18px;font-weight:600;">📋 已记录的菜单</span>
+      </div>
+      <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+        <div id="savedListFull"></div>
+      </div>
+    </div>
+
+    <!-- ===== 管理视图（整页） ===== -->
+    <div id="adminView" style="display:none;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <button id="backFromAdmin" class="admin-toggle">← 返回</button>
+        <span style="font-size:18px;font-weight:600;">⚙️ 管理菜单</span>
+      </div>
+      <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+        <h2 style="font-size:16px;font-weight:600;margin-bottom:16px;">➕ 添加新菜</h2>
+        <div class="admin-form">
+          <input class="emoji-input" id="newEmoji" placeholder="emoji" value="🍲" maxlength="8">
+          <input id="newName" placeholder="菜名" maxlength="20">
+          <select id="newTag1"><option value="">标签1</option></select>
+          <select id="newTag2"><option value="">标签2</option></select>
+          <select id="newTag3"><option value="">标签3</option></select>
+          <button class="add-btn" id="addBtn">添加</button>
+        </div>
+        <h2 style="font-size:16px;font-weight:600;margin-top:24px;margin-bottom:16px;">📋 当前菜单</h2>
+        <div class="admin-list" id="adminListFull"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ===== 购物车按钮 ===== -->
+  <button class="cart-fab" id="cartFab">
+    🛒
+    <span class="cart-badge" id="cartBadge">0</span>
+  </button>
+
+  <!-- ===== 遮罩 ===== -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <!-- ===== 底部面板 ===== -->
+  <div class="cart-panel" id="cartPanel">
+    <div class="cart-panel-header">
+      <span class="title">🎯 今晚选中的菜</span>
+      <button class="close-btn" id="cartCloseBtn">✕</button>
+    </div>
+    <div class="cart-list" id="cartList"></div>
+    <button class="save-btn" id="cartSaveBtn">📝 记录这餐</button>
+  </div>
+
+  <script>
+    // ============================================================
+    //  1. 数据层（对应小程序 Page.data  +  Storage）
+    // ============================================================
+    const DEFAULT_DISHES = [
+      { id: 1,  name: '番茄炒蛋',     emoji: '🍳', tags: ['快手', '不辣', '蔬菜'] },
+      { id: 2,  name: '红烧肉',       emoji: '🥩', tags: ['肉类', '费时'] },
+      { id: 3,  name: '清蒸鲈鱼',     emoji: '🐟', tags: ['海鲜', '快手', '不辣'] },
+      { id: 4,  name: '麻婆豆腐',     emoji: '🫘', tags: ['蔬菜', '快手', '辣'] },
+      { id: 5,  name: '糖醋排骨',     emoji: '🍖', tags: ['肉类', '费时'] },
+      { id: 6,  name: '蒜蓉西兰花',   emoji: '🥦', tags: ['蔬菜', '快手', '不辣'] },
+      { id: 7,  name: '宫保鸡丁',     emoji: '🍗', tags: ['肉类', '快手', '辣'] },
+      { id: 8,  name: '冬瓜排骨汤',   emoji: '🥣', tags: ['汤类', '费时', '不辣'] },
+      { id: 9,  name: '凉拌黄瓜',     emoji: '🥒', tags: ['凉菜', '快手', '不辣'] },
+      { id: 10, name: '可乐鸡翅',     emoji: '🍗', tags: ['肉类', '快手'] },
+      { id: 11, name: '鱼香肉丝',     emoji: '🥢', tags: ['肉类', '快手'] },
+      { id: 12, name: '白灼虾',       emoji: '🦐', tags: ['海鲜', '快手', '不辣'] },
+      { id: 13, name: '回锅肉',       emoji: '🥓', tags: ['肉类', '辣'] },
+      { id: 14, name: '醋溜白菜',     emoji: '🥬', tags: ['蔬菜', '快手', '不辣'] },
+      { id: 15, name: '酸菜鱼',       emoji: '🐠', tags: ['海鲜', '辣', '费时'] },
+      { id: 16, name: '青椒肉丝',     emoji: '🌶️', tags: ['肉类', '快手'] },
+      { id: 17, name: '西红柿牛腩',   emoji: '🥩', tags: ['肉类', '汤类', '费时'] },
+      { id: 18, name: '干煸四季豆',   emoji: '🫘', tags: ['蔬菜', '辣'] },
+      { id: 19, name: '蛋炒饭',       emoji: '🍚', tags: ['主食', '快手', '不辣'] },
+      { id: 20, name: '皮蛋豆腐',     emoji: '🫘', tags: ['凉菜', '快手', '不辣'] },
+    ];
+
+    const ALL_TAGS = ['肉类','蔬菜','海鲜','主食','汤类','凉菜','快手','费时','辣','不辣'];
+
+    // 全局状态（移植到小程序时放在 Page.data 里）
+    const store = {
+      dishes: [],
+      savedMeals: [],    // [{id, dishes: [{id,name,emoji,tags}], time: '...'}]
+      selectedIds: [],
+      activeTag: null,
+      spinning: false,
+      rouletteResult: null,
+      adminOpen: false,
+      savedOpen: false,
+      nextId: 1,
+    };
+
+    // 持久化（移植到小程序时替换为 wx.setStorageSync / wx.getStorageSync）
+    const DB = {
+      save() {
+        localStorage.setItem('menu_dishes', JSON.stringify(store.dishes));
+        localStorage.setItem('menu_saved', JSON.stringify(store.savedMeals));
+      },
+      load() {
+        const raw = localStorage.getItem('menu_dishes');
+        if (raw) {
+          try {
+            store.dishes = JSON.parse(raw);
+            store.nextId = Math.max(...store.dishes.map(d => d.id), 0) + 1;
+          } catch (e) { this.reset(); }
+        } else { this.reset(); }
+        const saved = localStorage.getItem('menu_saved');
+        if (saved) {
+          try { store.savedMeals = JSON.parse(saved); } catch (e) { store.savedMeals = []; }
+        }
+      },
+      reset() {
+        store.dishes = JSON.parse(JSON.stringify(DEFAULT_DISHES));
+        store.nextId = 21;
+      }
+    };
+
+    // ============================================================
+    //  2. DOM 引用（移植到小程序时改为 wxml 模板绑定）
+    // ============================================================
+    const dom = {
+      menuList:     document.querySelector('#menuList'),
+      filterEl:     document.querySelector('#filters'),
+      rouletteCards: document.querySelector('#rouletteCards'),
+      rouletteBtn:  document.querySelector('#rouletteBtn'),
+      adminToggle:  document.querySelector('#adminToggle'),
+      savedToggle:  document.querySelector('#savedToggle'),
+      mainView:     document.querySelector('#mainView'),
+      savedView:    document.querySelector('#savedView'),
+      adminView:    document.querySelector('#adminView'),
+      savedList:    document.querySelector('#savedListFull'),
+      adminList:    document.querySelector('#adminListFull'),
+      backFromSaved: document.querySelector('#backFromSaved'),
+      backFromAdmin: document.querySelector('#backFromAdmin'),
+      newEmoji:     document.querySelector('#newEmoji'),
+      newName:      document.querySelector('#newName'),
+      newTag1:      document.querySelector('#newTag1'),
+      newTag2:      document.querySelector('#newTag2'),
+      newTag3:      document.querySelector('#newTag3'),
+      addBtn:       document.querySelector('#addBtn'),
+      toast:        document.querySelector('#toast'),
+      cartFab:      document.querySelector('#cartFab'),
+      cartBadge:    document.querySelector('#cartBadge'),
+      cartOverlay:  document.querySelector('#cartOverlay'),
+      cartPanel:    document.querySelector('#cartPanel'),
+      cartList:     document.querySelector('#cartList'),
+      cartCloseBtn: document.querySelector('#cartCloseBtn'),
+      cartSaveBtn:  document.querySelector('#cartSaveBtn'),
+    };
+
+    // ============================================================
+    //  3. Toast 提示（小程序：showToast）
+    // ============================================================
+    let toastTimer = null;
+    function showToast(msg) {
+      dom.toast.textContent = msg;
+      dom.toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => dom.toast.classList.remove('show'), 2000);
+    }
+
+    // ============================================================
+    //  4. 帮助函数（小程序：utils）
+    // ============================================================
+    function shuffle(arr) {
+      const b = [...arr];
+      for (let i = b.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [b[i], b[j]] = [b[j], b[i]];
+      }
+      return b;
+    }
+
+    // 随机选 3 道菜（简单版）
+    function pick3(list) {
+      return shuffle(list).slice(0, 3);
+    }
+
+    /* 如需至少一道素菜，换用下面这个版本
+    function pick3(list) {
+      const veggie = list.filter(d => d.tags.includes('蔬菜'));
+      const other  = list.filter(d => !d.tags.includes('蔬菜'));
+      const sv = shuffle(veggie), so = shuffle(other);
+      const result = [];
+      if (sv.length > 0) result.push(sv[0]);
+      if (so.length >= 2) { result.push(so[0], so[1]); }
+      else if (so.length === 1) { result.push(so[0]); if (sv.length > 1) result.push(sv[1]); }
+      else { if (sv.length > 1) result.push(sv[1]); if (sv.length > 2) result.push(sv[2]); }
+      return result.slice(0, 3);
+    }
+    */
+
+    function filteredDishes() {
+      if (!store.activeTag) return store.dishes;
+      return store.dishes.filter(d => d.tags.includes(store.activeTag));
+    }
+
+    function getSelectedDishes() {
+      return store.selectedIds.map(id => store.dishes.find(d => d.id === id)).filter(Boolean);
+    }
+
+    // ============================================================
+    //  5. 渲染层（小程序：WXML 模板 + setData）
+    // ============================================================
+
+    // 5a. 管理页面 —— 标签下拉初始化
+    function initAdminSelects() {
+      const opts = '<option value="">—</option>' + ALL_TAGS.map(t => `<option value="${t}">${t}</option>`).join('');
+      [dom.newTag1, dom.newTag2, dom.newTag3].forEach(sel => { sel.innerHTML = opts; });
+    }
+
+    // 5b. 管理页面 —— 菜品列表
+    function renderAdminList() {
+      if (store.dishes.length === 0) {
+        dom.adminList.innerHTML = '<div class="admin-empty">还没有菜，快来添加吧 🍳</div>';
+        return;
+      }
+      dom.adminList.innerHTML = [...store.dishes]
+        .sort((a, b) => a.name.localeCompare(b.name, 'zh'))
+        .map(d => `<div class="admin-row" data-id="${d.id}">
+          <span class="emoji">${d.emoji}</span>
+          <span class="name">${d.name}</span>
+          <span class="tags">${d.tags.map(t => `<span class="tag tag-${t}">${t}</span>`).join('')}</span>
+          <button class="del-btn" data-id="${d.id}">✕</button>
+        </div>`).join('');
+    }
+
+    // 5c. 筛选标签
+    function renderFilters() {
+      const tags = [...new Set(store.dishes.flatMap(d => d.tags))].sort();
+      dom.filterEl.innerHTML =
+        `<span class="filter-tag ${!store.activeTag ? 'active' : ''}" data-tag="">全部</span>` +
+        tags.map(t => `<span class="filter-tag ${store.activeTag === t ? 'active' : ''}" data-tag="${t}">${t}</span>`).join('');
+    }
+
+    // 5d. 菜单列表
+    function renderMenu() {
+      const list = filteredDishes();
+      if (list.length === 0) {
+        dom.menuList.innerHTML = '<div style="text-align:center;color:#bbb;padding:40px 0;">没有找到对应的菜 🙈</div>';
+        return;
+      }
+      dom.menuList.innerHTML = list.map(d => {
+        const sel = store.selectedIds.includes(d.id);
+        return `<div class="menu-item" data-id="${d.id}">
+          <span class="dish-emoji">${d.emoji}</span>
+          <span class="dish-info">
+            <span class="dish-name">${d.name}</span>
+            <span class="dish-tags">${d.tags.map(t => `<span class="tag tag-${t}">${t}</span>`).join('')}</span>
+          </span>
+          <button class="select-btn ${sel ? 'selected' : ''}" data-id="${d.id}">${sel ? '✓ 已选' : '选择'}</button>
+        </div>`;
+      }).join('');
+    }
+
+    // 5e. 购物车按钮徽标
+    function renderSummary() {
+      const dishes = getSelectedDishes();
+      if (dishes.length !== store.selectedIds.length) {
+        store.selectedIds = dishes.map(d => d.id);
+      }
+      if (dishes.length === 0) {
+        dom.cartFab.classList.remove('show');
+        return;
+      }
+      dom.cartBadge.textContent = dishes.length;
+      dom.cartFab.classList.add('show');
+    }
+
+    // 5e2. 购物车面板内容
+    function renderCartPanel() {
+      const dishes = getSelectedDishes();
+      if (dishes.length === 0) {
+        dom.cartList.innerHTML = '<div class="cart-empty">还没有选菜哦</div>';
+        return;
+      }
+      dom.cartList.innerHTML = dishes.map(d =>
+        '<div class="cart-item">' +
+          '<span class="emoji">' + d.emoji + '</span>' +
+          '<span class="name">' + d.name + '</span>' +
+          '<button class="del-item-btn" data-id="' + d.id + '">✕</button>' +
+        '</div>'
+      ).join('');
+    }
+
+    function openCartPanel() {
+      renderCartPanel();
+      dom.cartOverlay.classList.add('open');
+      dom.cartPanel.classList.add('open');
+    }
+
+    function closeCartPanel() {
+      dom.cartOverlay.classList.remove('open');
+      dom.cartPanel.classList.remove('open');
+    }
+
+    // 5f. 随机结果卡片
+    function renderRoulette(dishes) {
+      if (!dishes || dishes.length === 0) {
+        dom.rouletteCards.innerHTML = '<div class="roulette-placeholder">点下方按钮<br>随机搭配 3 道菜</div>';
+        confirmRouletteBtn.style.display = 'none';
+        return;
+      }
+      dom.rouletteCards.innerHTML = dishes.map(d =>
+        `<div class="roulette-card">
+            <button class="remove-btn" data-id="${d.id}">✕</button>
+            <span class="emoji">${d.emoji}</span>
+            <span class="dish-name">${d.name}</span>
+          </div>`
+      ).join('');
+      confirmRouletteBtn.style.display = '';
+    }
+
+    // 5g. 已记录菜单
+    function renderSavedMeals() {
+      if (store.savedMeals.length === 0) {
+        dom.savedList.innerHTML = '<div class="admin-empty">还没有记录，选好菜后点「记录这餐」</div>';
+        return;
+      }
+      dom.savedList.innerHTML =
+        '<div style="text-align:right;margin-bottom:12px;"><button class="clear-btn" id="clearAllMeals" style="font-size:12px;padding:4px 14px;">清空全部记录</button></div>' +
+        store.savedMeals.map((meal, mi) =>
+          '<div class="saved-meal">' +
+            '<div class="meal-dishes">' + meal.dishes.map(d => '<span class="item"><span class="emoji">' + d.emoji + '</span> ' + d.name + '</span>').join('') + '</div>' +
+            '<span class="meal-time">' + meal.time + '</span>' +
+            '<button class="del-meal-btn" data-idx="' + mi + '">✕</button>' +
+          '</div>'
+        ).join('');
+    }
+
+    // 5h. 刷新主界面
+    function renderAll() {
+      renderFilters();
+      renderMenu();
+      renderSummary();
+    }
+
+    // ============================================================
+    //  6. 视图切换（小程序：wx.navigateTo / 条件渲染）
+    // ============================================================
+    function showView(opts) {
+      const showMain = !opts.admin && !opts.saved;
+      dom.mainView.style.display = showMain ? '' : 'none';
+      dom.adminView.style.display = opts.admin ? '' : 'none';
+      dom.savedView.style.display = opts.saved ? '' : 'none';
+      dom.adminToggle.classList.toggle('active', !!opts.admin);
+      dom.savedToggle.classList.toggle('active', !!opts.saved);
+      store.adminOpen = !!opts.admin;
+      store.savedOpen = !!opts.saved;
+      if (opts.admin) renderAdminList();
+      if (opts.saved) renderSavedMeals();
+    }
+
+    // ============================================================
+    //  7. 事件层（小程序：bindtap + data-*）
+    // ============================================================
+
+    // 7a. 记录 / 管理 切换
+    dom.savedToggle.onclick = () => showView({ saved: !store.savedOpen });
+    dom.backFromSaved.onclick = () => showView({});
+    dom.adminToggle.onclick = () => showView({ admin: !store.adminOpen });
+    dom.backFromAdmin.onclick = () => showView({});
+
+    // 7b. 筛选点击
+    dom.filterEl.addEventListener('click', e => {
+      const el = e.target.closest('.filter-tag');
+      if (!el) return;
+      store.activeTag = el.dataset.tag || null;
+      renderAll();
+    });
+
+    // 7c. 选择按钮
+    dom.menuList.addEventListener('click', e => {
+      const btn = e.target.closest('.select-btn');
+      if (!btn) return;
+      const id = +btn.dataset.id;
+      const idx = store.selectedIds.indexOf(id);
+      if (idx !== -1) store.selectedIds.splice(idx, 1);
+      else store.selectedIds.push(id);
+      renderAll();
+    });
+
+    // 7d. 购物车 —— 打开
+    dom.cartFab.addEventListener('click', () => {
+      if (store.selectedIds.length === 0) return;
+      openCartPanel();
+    });
+
+    // 7e. 购物车 —— 关闭（遮罩 / 关闭按钮）
+    dom.cartOverlay.addEventListener('click', closeCartPanel);
+    dom.cartCloseBtn.addEventListener('click', closeCartPanel);
+
+    // 7f. 购物车 —— 删除单项
+    dom.cartList.addEventListener('click', e => {
+      const btn = e.target.closest('.del-item-btn');
+      if (!btn) return;
+      const id = +btn.dataset.id;
+      store.selectedIds = store.selectedIds.filter(sid => sid !== id);
+      renderCartPanel();
+      renderAll();
+      if (store.selectedIds.length === 0) closeCartPanel();
+    });
+
+    // 7g. 购物车 —— 记录这餐
+    dom.cartSaveBtn.addEventListener('click', () => {
+      const dishes = getSelectedDishes();
+      if (dishes.length === 0) return;
+      const now = new Date();
+      const time = (now.getMonth()+1) + '/' + now.getDate() + ' ' +
+        String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+      store.savedMeals.unshift({ id: Date.now(), dishes, time });
+      DB.save();
+      store.selectedIds = [];
+      closeCartPanel();
+      renderAll();
+      showToast('已记录这餐 🎉');
+    });
+
+    // 7h. 随机搭配
+    dom.rouletteBtn.addEventListener('click', () => {
+      if (store.spinning) return;
+      const candidates = filteredDishes();
+      if (candidates.length < 3) {
+        dom.rouletteCards.innerHTML = '<div class="roulette-placeholder">菜太少啦，先取消筛选 🙈</div>';
+        return;
+      }
+      store.spinning = true;
+      let rounds = 0;
+      const max = 16 + Math.floor(Math.random() * 10);
+      const tick = () => {
+        renderRoulette(pick3(candidates));
+        rounds++;
+        if (rounds >= max) {
+          const final = pick3(candidates);
+          renderRoulette(final);
+          store.rouletteResult = final;
+          store.selectedIds = final.map(d => d.id);
+          store.spinning = false;
+          renderMenu();
+          renderSummary();
+          return;
+        }
+        setTimeout(tick, 50 + Math.floor(Math.random() * 80));
+      };
+      tick();
+    });
+
+    // 7i. 移除随机卡片
+    dom.rouletteCards.addEventListener('click', e => {
+      const btn = e.target.closest('.remove-btn');
+      if (!btn) return;
+      const id = +btn.dataset.id;
+      if (store.rouletteResult) {
+        store.rouletteResult = store.rouletteResult.filter(d => d.id !== id);
+      }
+      const card = btn.closest('.roulette-card');
+      const container = card.parentElement;
+      card.remove();
+      if (container.querySelectorAll('.roulette-card').length === 0) {
+        dom.rouletteCards.innerHTML = '<div class="roulette-placeholder">点下方按钮<br>随机搭配 3 道菜</div>';
+        store.rouletteResult = null;
+        confirmRouletteBtn.style.display = 'none';
+      }
+    });
+
+    // 7j. 就做这些 —— 保存到记录
+    confirmRouletteBtn.addEventListener('click', () => {
+      if (!store.rouletteResult || store.rouletteResult.length === 0) return;
+      const now = new Date();
+      const time = (now.getMonth()+1) + '/' + now.getDate() + ' ' +
+        String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+      store.savedMeals.unshift({ id: Date.now(), dishes: [...store.rouletteResult], time });
+      DB.save();
+      store.rouletteResult = null;
+      renderRoulette(null);
+      showToast('已记录这餐 🎉');
+    });
+
+    // 7k. 管理 —— 删除菜品
+    dom.adminList.addEventListener('click', e => {
+      const del = e.target.closest('.del-btn');
+      if (!del) return;
+      const id = +del.dataset.id;
+      const dish = store.dishes.find(d => d.id === id);
+      store.dishes = store.dishes.filter(d => d.id !== id);
+      DB.save();
+      renderAdminList();
+      store.selectedIds = store.selectedIds.filter(sid => sid !== id);
+      renderAll();
+      showToast('已删除「' + dish.name + '」');
+    });
+
+    // 7l. 管理 —— 添加菜品
+    dom.addBtn.addEventListener('click', () => {
+      const name = dom.newName.value.trim();
+      const emoji = dom.newEmoji.value.trim() || '🍲';
+      const tags = [dom.newTag1.value, dom.newTag2.value, dom.newTag3.value].filter(Boolean);
+      if (!name) { showToast('请输入菜名'); return; }
+      if (tags.length === 0) { showToast('请至少选一个标签'); return; }
+      if (store.dishes.some(d => d.name === name)) { showToast('这道菜已经在了'); return; }
+      store.dishes.push({ id: store.nextId++, name, emoji, tags });
+      DB.save();
+      renderAdminList();
+      renderAll();
+      dom.newName.value = '';
+      dom.newEmoji.value = '🍲';
+      [dom.newTag1, dom.newTag2, dom.newTag3].forEach(s => s.value = '');
+      showToast('已添加「' + name + '」');
+    });
+
+    // 7m. 记录视图 —— 删除 / 清空
+    dom.savedList.addEventListener('click', e => {
+      if (!store.savedOpen) return;
+      const delBtn = e.target.closest('.del-meal-btn');
+      if (delBtn) {
+        store.savedMeals.splice(+delBtn.getAttribute('data-idx'), 1);
+        DB.save();
+        renderSavedMeals();
+        return;
+      }
+      if (e.target.id === 'clearAllMeals') {
+        store.savedMeals = [];
+        DB.save();
+        renderSavedMeals();
+        showToast('已清空所有记录');
+      }
+    });
+
+    // ============================================================
+    //  8. 启动（小程序：onLoad）
+    // ============================================================
+    DB.load();
+    initAdminSelects();
+    renderAll();
+  </script>
+</body>
+</html>
