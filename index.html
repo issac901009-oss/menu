@@ -14,10 +14,15 @@
       min-height: 100vh;
       min-height: -webkit-fill-available;
       -webkit-overflow-scrolling: touch;
+      overflow-x: hidden;
+      position: relative;
+      width: 100%;
     }
+
 
     html {
       height: -webkit-fill-available;
+      overflow-x: hidden;
     }
 
     .container {
@@ -905,6 +910,191 @@
 
     .toast.show { opacity: 1; }
 
+    /* ===== 确认弹窗 ===== */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 101;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .confirm-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .confirm-dialog {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 24px 20px;
+      width: 280px;
+      max-width: 90vw;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .confirm-dialog p {
+      font-size: 15px;
+      color: #2c2c2c;
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+    .confirm-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .confirm-actions button {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .confirm-cancel {
+      background: #f0efed;
+      color: #888;
+    }
+    .confirm-cancel:hover { background: #e5e4e2; }
+    .confirm-ok {
+      background: #e74c3c;
+      color: #fff;
+    }
+    .confirm-ok:hover { background: #c0392b; }
+
+    /* ===== 统计视图 ===== */
+    .stats-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .stats-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .stats-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e67e22;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stats-overview {
+      display: flex;
+      gap: 12px;
+    }
+    .stats-overview .item {
+      flex: 1;
+      text-align: center;
+      padding: 12px 8px;
+      background: #fafafa;
+      border-radius: 12px;
+    }
+    .stats-overview .item .num {
+      font-size: 24px;
+      font-weight: 700;
+      color: #e67e22;
+    }
+    .stats-overview .item .label {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+    .stats-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .stats-bar-row .rank {
+      width: 20px;
+      color: #bbb;
+      font-weight: 600;
+      text-align: right;
+      font-size: 13px;
+    }
+    .stats-bar-row .name {
+      width: 80px;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .stats-bar-row .bar-bg {
+      flex: 1;
+      height: 20px;
+      background: #f5f5f5;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .stats-bar-row .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f39c12, #e67e22);
+      border-radius: 10px;
+      transition: width 0.6s ease;
+    }
+    .stats-bar-row .count {
+      width: 36px;
+      text-align: right;
+      color: #999;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .stats-trend {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .stats-trend .emoji-rating {
+      font-size: 22px;
+      line-height: 1;
+    }
+    .stats-dist-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .stats-dist-item .label {
+      width: 40px;
+      color: #888;
+      flex-shrink: 0;
+    }
+    .stats-dist-item .bar-bg {
+      flex: 1;
+      height: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .stats-dist-item .bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.6s ease;
+    }
+    .stats-dist-item .pct {
+      width: 40px;
+      text-align: right;
+      color: #999;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .stats-empty {
+      text-align: center;
+      color: #ccc;
+      font-size: 14px;
+      padding: 40px 0;
+    }
+
     footer {
       text-align: center;
       margin-top: 48px;
@@ -1195,6 +1385,7 @@
         <p>点一点，选出今晚的家宴</p>
       </div>
       <div style="display:flex;gap:8px;">
+        <button class="admin-toggle" id="statsToggle">📊 统计</button>
         <button class="admin-toggle" id="savedToggle">📋 记录</button>
         <button class="admin-toggle" id="adminToggle">⚙️ 管理</button>
       </div>
@@ -1256,9 +1447,29 @@
       </div>
     </div>
 
+    <!-- ===== 统计视图（整页） ===== -->
+    <div id="statsView" style="display:none;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <button id="backFromStats" class="admin-toggle">← 返回</button>
+        <span style="font-size:18px;font-weight:600;">📊 统计数据</span>
+      </div>
+      <div id="statsContent"></div>
+    </div>
+
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- ===== 确认弹窗 ===== -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-dialog">
+      <p id="confirmMessage">确定要删除吗？</p>
+      <div class="confirm-actions">
+        <button class="confirm-cancel" id="confirmCancel">取消</button>
+        <button class="confirm-ok" id="confirmOk">删除</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== 购物车按钮 ===== -->
   <button class="cart-fab" id="cartFab">
@@ -1431,6 +1642,9 @@
       adminList:    document.querySelector('#adminListFull'),
       backFromSaved: document.querySelector('#backFromSaved'),
       backFromAdmin: document.querySelector('#backFromAdmin'),
+      statsToggle: document.querySelector('#statsToggle'),
+      backFromStats: document.querySelector('#backFromStats'),
+      statsContent: document.querySelector('#statsContent'),
       newEmoji:     document.querySelector('#newEmoji'),
       newName:      document.querySelector('#newName'),
       newTag1:      document.querySelector('#newTag1'),
@@ -1466,6 +1680,10 @@
       editIngredients: document.querySelector('#editIngredients'),
       editRecipe:   document.querySelector('#editRecipe'),
       confirmRouletteBtn: document.querySelector('#confirmRouletteBtn'),
+      confirmOverlay: document.querySelector('#confirmOverlay'),
+      confirmMessage: document.querySelector('#confirmMessage'),
+      confirmCancel: document.querySelector('#confirmCancel'),
+      confirmOk: document.querySelector('#confirmOk'),
     };
 
     // ============================================================
@@ -1477,6 +1695,14 @@
       dom.toast.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => dom.toast.classList.remove('show'), 2000);
+    }
+
+    let _confirmCallback = null;
+
+    function showConfirm(msg, onConfirm) {
+      dom.confirmMessage.textContent = msg;
+      _confirmCallback = onConfirm;
+      dom.confirmOverlay.classList.add('open');
     }
 
     // ============================================================
@@ -1882,6 +2108,129 @@
         ).join('');
     }
 
+    // 5g2. 统计视图
+    function renderStats() {
+      const meals = store.savedMeals;
+      if (meals.length === 0) {
+        dom.statsContent.innerHTML = '<div class="stats-empty">还没有记录，选好菜后点「记录这餐」<br>数据会在这里呈现 📊</div>';
+        return;
+      }
+
+      // 1. 总览
+      const total = meals.length;
+      const reviewed = meals.filter(m => m.rating).length;
+      const notReviewed = total - reviewed;
+
+      // 菜品频次统计
+      const dishCounts = {};
+      meals.forEach(m => {
+        m.dishes.forEach(d => {
+          const key = d.emoji + ' ' + d.name;
+          dishCounts[key] = (dishCounts[key] || 0) + 1;
+        });
+      });
+      const top5 = Object.entries(dishCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const max = top5.length > 0 ? top5[0][1] : 1;
+
+      // 评分统计
+      const ratingCounts = { good: 0, ok: 0, bad: 0 };
+      meals.forEach(m => { if (m.rating) ratingCounts[m.rating]++; });
+      const ratingTotal = ratingCounts.good + ratingCounts.ok + ratingCounts.bad;
+
+      // 最近评分趋势
+      const recent = meals.filter(m => m.rating).slice(0, 20);
+
+      // 标签统计
+      const tagCounts = {};
+      meals.forEach(m => {
+        m.dishes.forEach(d => {
+          (d.tags || []).forEach(t => {
+            if (!['快手','费时','辣','不辣'].includes(t)) {
+              tagCounts[t] = (tagCounts[t] || 0) + 1;
+            }
+          });
+        });
+      });
+      const tagEntries = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+      const maxTag = tagEntries.length > 0 ? tagEntries[0][1] : 1;
+
+      let html = '<div class="stats-grid">';
+
+      // 总览卡片
+      html += '<div class="stats-card"><h3>📊 总览</h3><div class="stats-overview">' +
+        '<div class="item"><div class="num">' + total + '</div><div class="label">总餐数</div></div>' +
+        '<div class="item"><div class="num">' + reviewed + '</div><div class="label">已点评</div></div>' +
+        '<div class="item"><div class="num">' + notReviewed + '</div><div class="label">待点评</div></div>' +
+        '<div class="item"><div class="num">' + Object.keys(dishCounts).length + '</div><div class="label">不同菜品</div></div>' +
+      '</div></div>';
+
+      // 最常做 TOP5
+      html += '<div class="stats-card"><h3>🏆 最常做的菜</h3>';
+      top5.forEach(([name, count], i) => {
+        const pct = (count / max) * 100;
+        html += '<div class="stats-bar-row">' +
+          '<span class="rank">' + (i + 1) + '</span>' +
+          '<span class="name">' + name + '</span>' +
+          '<div class="bar-bg"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+          '<span class="count">' + count + '</span>' +
+        '</div>';
+      });
+      if (top5.length === 0) html += '<div style="color:#ccc;font-size:13px;">暂无数据</div>';
+      html += '</div>';
+
+      // 评分分布
+      html += '<div class="stats-card"><h3>😋 评分分布</h3>';
+      if (ratingTotal > 0) {
+        [
+          ['good', '😋 好吃', '#27ae60'],
+          ['ok', '😐 一般', '#f39c12'],
+          ['bad', '😞 不好', '#e74c3c']
+        ].forEach(([key, label, color]) => {
+          const count = ratingCounts[key];
+          const pct = ratingTotal > 0 ? (count / ratingTotal) * 100 : 0;
+          html += '<div class="stats-dist-item">' +
+            '<span class="label">' + label + '</span>' +
+            '<div class="bar-bg"><div class="bar-fill" style="width:' + pct + '%;background:' + color + ';"></div></div>' +
+            '<span class="pct">' + count + '</span>' +
+          '</div>';
+        });
+      } else {
+        html += '<div style="color:#ccc;font-size:13px;">暂无点评数据</div>';
+      }
+      html += '</div>';
+
+      // 最近评分趋势
+      html += '<div class="stats-card"><h3>📈 最近评分</h3>';
+      if (recent.length > 0) {
+        html += '<div style="font-size:12px;color:#bbb;margin-bottom:8px;">最近 ' + recent.length + ' 餐</div>';
+        html += '<div class="stats-trend">' +
+          recent.map(m => '<span class="emoji-rating">' + (RATING_EMOJI[m.rating] || '') + '</span>').join('') +
+        '</div>';
+      } else {
+        html += '<div style="color:#ccc;font-size:13px;">暂无点评数据</div>';
+      }
+      html += '</div>';
+
+      // 口味偏好
+      html += '<div class="stats-card"><h3>🏷️ 口味偏好</h3>';
+      if (tagEntries.length > 0) {
+        tagEntries.forEach(([tag, count]) => {
+          const pct = (count / maxTag) * 100;
+          html += '<div class="stats-dist-item">' +
+            '<span class="label" style="width:auto;">' + tag + '</span>' +
+            '<div class="bar-bg"><div class="bar-fill" style="width:' + pct + '%;background:#e67e22;"></div></div>' +
+            '<span class="pct">' + count + '</span>' +
+          '</div>';
+        });
+      } else {
+        html += '<div style="color:#ccc;font-size:13px;">暂无数据</div>';
+      }
+      html += '</div>';
+
+      html += '</div>';
+      dom.statsContent.innerHTML = html;
+    }
+
     // 5h. 刷新主界面
     function renderAll() {
       renderFilters();
@@ -1893,18 +2242,21 @@
     //  6. 视图切换（小程序：wx.navigateTo / 条件渲染）
     // ============================================================
     function showView(opts) {
-      const showMain = !opts.admin && !opts.saved;
+      const showMain = !opts.admin && !opts.saved && !opts.stats;
       dom.mainView.style.display = showMain ? '' : 'none';
       dom.adminView.style.display = opts.admin ? '' : 'none';
       dom.savedView.style.display = opts.saved ? '' : 'none';
+      dom.statsView.style.display = opts.stats ? '' : 'none';
       dom.adminToggle.classList.toggle('active', !!opts.admin);
       dom.savedToggle.classList.toggle('active', !!opts.saved);
+      dom.statsToggle.classList.toggle('active', !!opts.stats);
       store.adminOpen = !!opts.admin;
       store.savedOpen = !!opts.saved;
       if (opts.admin) renderAdminList();
       if (opts.saved) renderSavedMeals();
+      if (opts.stats) renderStats();
       // 淡入效果
-      const visible = showMain ? dom.mainView : opts.admin ? dom.adminView : dom.savedView;
+      const visible = showMain ? dom.mainView : opts.admin ? dom.adminView : opts.saved ? dom.savedView : dom.statsView;
       if (visible) {
         visible.classList.remove('view-animate');
         void visible.offsetWidth;
@@ -1921,6 +2273,8 @@
     dom.backFromSaved.onclick = () => showView({});
     dom.adminToggle.onclick = () => showView({ admin: !store.adminOpen });
     dom.backFromAdmin.onclick = () => showView({});
+    dom.statsToggle.onclick = () => showView({ stats: true });
+    dom.backFromStats.onclick = () => showView({});
 
     // 7a2. 添加新菜 —— 展开 / 收缩
     dom.adminFormTitle.addEventListener('click', () => {
@@ -2155,16 +2509,18 @@
       if (del) {
         const id = +del.dataset.id;
         const dish = store.dishes.find(d => d.id === id);
-        const row = del.closest('.admin-row');
-        if (row) row.classList.add('out');
-        setTimeout(() => {
-          store.dishes = store.dishes.filter(d => d.id !== id);
-          DB.save();
-          renderAdminList();
-          store.selectedIds = store.selectedIds.filter(sid => sid !== id);
-          renderAll();
-          showToast('已删除「' + dish.name + '」');
-        }, 200);
+        showConfirm('确定要删除「' + dish.name + '」吗？', () => {
+          const row = del.closest('.admin-row');
+          if (row) row.classList.add('out');
+          setTimeout(() => {
+            store.dishes = store.dishes.filter(d => d.id !== id);
+            DB.save();
+            renderAdminList();
+            store.selectedIds = store.selectedIds.filter(sid => sid !== id);
+            renderAll();
+            showToast('已删除「' + dish.name + '」');
+          }, 200);
+        });
         return;
       }
       // 点击菜品行 → 编辑弹窗
@@ -2206,24 +2562,44 @@
       if (delBtn) {
         const idx = +delBtn.getAttribute('data-idx');
         const deleted = store.savedMeals[idx];
-        store.savedMeals.splice(idx, 1);
-        if (deleted && deleted.id === _lastSavedMealId) {
-          _lastSavedMealId = null;
-          localStorage.removeItem('menu_pending_review');
-        }
-        DB.save();
-        renderSavedMeals();
-        renderSummary();
+        showConfirm('确定要删除这条记录吗？', () => {
+          store.savedMeals.splice(idx, 1);
+          if (deleted && deleted.id === _lastSavedMealId) {
+            _lastSavedMealId = null;
+            localStorage.removeItem('menu_pending_review');
+          }
+          DB.save();
+          renderSavedMeals();
+          renderSummary();
+        });
         return;
       }
       if (e.target.id === 'clearAllMeals') {
-        store.savedMeals = [];
-        _lastSavedMealId = null;
-        localStorage.removeItem('menu_pending_review');
-        DB.save();
-        renderSavedMeals();
-        renderSummary();
-        showToast('已清空所有记录');
+        showConfirm('确定要清空所有记录吗？此操作不可撤回。', () => {
+          store.savedMeals = [];
+          _lastSavedMealId = null;
+          localStorage.removeItem('menu_pending_review');
+          DB.save();
+          renderSavedMeals();
+          renderSummary();
+          showToast('已清空所有记录');
+        });
+      }
+    });
+
+    // 7n. 确认弹窗
+    dom.confirmCancel.addEventListener('click', () => {
+      dom.confirmOverlay.classList.remove('open');
+      _confirmCallback = null;
+    });
+    dom.confirmOk.addEventListener('click', () => {
+      dom.confirmOverlay.classList.remove('open');
+      if (_confirmCallback) { _confirmCallback(); _confirmCallback = null; }
+    });
+    dom.confirmOverlay.addEventListener('click', e => {
+      if (e.target === dom.confirmOverlay) {
+        dom.confirmOverlay.classList.remove('open');
+        _confirmCallback = null;
       }
     });
 
