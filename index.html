@@ -1004,37 +1004,24 @@
       nextId: 1,
     };
 
-    // 持久化（服务器存储，替换 localStorage）
+    // 持久化（移植到小程序时替换为 wx.setStorageSync / wx.getStorageSync）
     const DB = {
-      async save() {
-        try {
-          await fetch('/api/data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              dishes: store.dishes,
-              savedMeals: store.savedMeals,
-              nextId: store.nextId
-            })
-          });
-        } catch (e) {
-          showToast('保存失败，请检查网络');
-        }
+      save() {
+        localStorage.setItem('menu_dishes', JSON.stringify(store.dishes));
+        localStorage.setItem('menu_saved', JSON.stringify(store.savedMeals));
       },
-      async load() {
-        try {
-          const resp = await fetch('/api/data');
-          if (resp.ok) {
-            const data = await resp.json();
-            if (data.dishes && data.dishes.length > 0) {
-              store.dishes = data.dishes;
-              store.savedMeals = data.savedMeals || [];
-              store.nextId = data.nextId || Math.max(...store.dishes.map(d => d.id), 0) + 1;
-              return;
-            }
-          }
-        } catch (e) { /* 失败则用默认 */ }
-        this.reset();
+      load() {
+        const raw = localStorage.getItem('menu_dishes');
+        if (raw) {
+          try {
+            store.dishes = JSON.parse(raw);
+            store.nextId = Math.max(...store.dishes.map(d => d.id), 0) + 1;
+          } catch (e) { this.reset(); }
+        } else { this.reset(); }
+        const saved = localStorage.getItem('menu_saved');
+        if (saved) {
+          try { store.savedMeals = JSON.parse(saved); } catch (e) { store.savedMeals = []; }
+        }
       },
       reset() {
         store.dishes = JSON.parse(JSON.stringify(DEFAULT_DISHES));
@@ -1457,11 +1444,9 @@
     // ============================================================
     //  8. 启动（小程序：onLoad）
     // ============================================================
-    (async () => {
-      await DB.load();
-      initAdminSelects();
-      renderAll();
-    })();
+    DB.load();
+    initAdminSelects();
+    renderAll();
   </script>
 </body>
 </html>
