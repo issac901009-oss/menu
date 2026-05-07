@@ -905,6 +905,37 @@
 
     .toast.show { opacity: 1; }
 
+    /* ===== 最常做的菜 TOP ===== */
+    .stats-top {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .stats-top h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #e67e22;
+    }
+    .stats-top .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      font-size: 14px;
+    }
+    .stats-top .row .rank {
+      width: 18px;
+      color: #bbb;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .stats-top .row .name { flex: 1; }
+    .stats-top .row .count {
+      color: #e67e22;
+      font-weight: 600;
+    }
+
     footer {
       text-align: center;
       margin-top: 48px;
@@ -1870,6 +1901,25 @@
         dom.savedList.innerHTML = '<div class="admin-empty">还没有记录，选好菜后点「记录这餐」</div>';
         return;
       }
+      // 计算最常做的菜 TOP
+      const dishCounts = {};
+      store.savedMeals.forEach(m => {
+        m.dishes.forEach(d => {
+          const key = d.emoji + ' ' + d.name;
+          dishCounts[key] = (dishCounts[key] || 0) + 1;
+        });
+      });
+      const top5 = Object.entries(dishCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, count], i) =>
+          '<div class="row">' +
+            '<span class="rank">' + (i + 1) + '</span>' +
+            '<span class="name">' + name + '</span>' +
+            '<span class="count">' + count + '次</span>' +
+          '</div>'
+        ).join('');
+
       dom.savedList.innerHTML =
         '<div style="text-align:right;margin-bottom:12px;"><button class="clear-btn" id="clearAllMeals" style="font-size:12px;padding:4px 14px;">清空全部记录</button></div>' +
         store.savedMeals.map((meal, mi) =>
@@ -1879,7 +1929,11 @@
             '<button class="list-btn" data-idx="' + mi + '">📋 详情</button>' +
             '<button class="del-meal-btn" data-idx="' + mi + '">✕</button>' +
           '</div>'
-        ).join('');
+        ).join('') +
+        '<div class="stats-top">' +
+          '<h3>🏆 最常做的菜</h3>' +
+          top5 +
+        '</div>';
     }
 
     // 5h. 刷新主界面
