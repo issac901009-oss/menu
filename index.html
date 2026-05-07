@@ -936,6 +936,61 @@
       font-weight: 600;
     }
 
+    /* ===== 统计页面 ===== */
+    .stats-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .stats-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .stats-bar-row .rank {
+      width: 20px;
+      color: #bbb;
+      font-weight: 600;
+      text-align: right;
+      font-size: 13px;
+    }
+    .stats-bar-row .name {
+      width: 90px;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .stats-bar-row .bar-bg {
+      flex: 1;
+      height: 20px;
+      background: #f5f5f5;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .stats-bar-row .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f39c12, #e67e22);
+      border-radius: 10px;
+    }
+    .stats-bar-row .count {
+      width: 36px;
+      text-align: right;
+      color: #e67e22;
+      font-weight: 600;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .stats-empty {
+      text-align: center;
+      color: #ccc;
+      font-size: 14px;
+      padding: 40px 0;
+    }
+
     footer {
       text-align: center;
       margin-top: 48px;
@@ -1226,6 +1281,7 @@
         <p>点一点，选出今晚的家宴</p>
       </div>
       <div style="display:flex;gap:8px;">
+        <button class="admin-toggle" id="statsToggle">📊 统计</button>
         <button class="admin-toggle" id="savedToggle">📋 记录</button>
         <button class="admin-toggle" id="adminToggle">⚙️ 管理</button>
       </div>
@@ -1285,6 +1341,15 @@
         <h2 style="font-size:16px;font-weight:600;margin-top:24px;margin-bottom:16px;">📋 当前菜单</h2>
         <div class="admin-list" id="adminListFull"></div>
       </div>
+    </div>
+
+    <!-- ===== 统计视图（整页） ===== -->
+    <div id="statsView" style="display:none;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <button id="backFromStats" class="admin-toggle">← 返回</button>
+        <span style="font-size:18px;font-weight:600;">📊 统计数据</span>
+      </div>
+      <div id="statsContent"></div>
     </div>
 
   </div>
@@ -1462,6 +1527,10 @@
       adminList:    document.querySelector('#adminListFull'),
       backFromSaved: document.querySelector('#backFromSaved'),
       backFromAdmin: document.querySelector('#backFromAdmin'),
+      statsToggle: document.querySelector('#statsToggle'),
+      backFromStats: document.querySelector('#backFromStats'),
+      statsContent: document.querySelector('#statsContent'),
+      statsView: document.querySelector('#statsView'),
       newEmoji:     document.querySelector('#newEmoji'),
       newName:      document.querySelector('#newName'),
       newTag1:      document.querySelector('#newTag1'),
@@ -1901,25 +1970,6 @@
         dom.savedList.innerHTML = '<div class="admin-empty">还没有记录，选好菜后点「记录这餐」</div>';
         return;
       }
-      // 计算最常做的菜 TOP
-      const dishCounts = {};
-      store.savedMeals.forEach(m => {
-        m.dishes.forEach(d => {
-          const key = d.emoji + ' ' + d.name;
-          dishCounts[key] = (dishCounts[key] || 0) + 1;
-        });
-      });
-      const top5 = Object.entries(dishCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([name, count], i) =>
-          '<div class="row">' +
-            '<span class="rank">' + (i + 1) + '</span>' +
-            '<span class="name">' + name + '</span>' +
-            '<span class="count">' + count + '次</span>' +
-          '</div>'
-        ).join('');
-
       dom.savedList.innerHTML =
         '<div style="text-align:right;margin-bottom:12px;"><button class="clear-btn" id="clearAllMeals" style="font-size:12px;padding:4px 14px;">清空全部记录</button></div>' +
         store.savedMeals.map((meal, mi) =>
@@ -1929,11 +1979,36 @@
             '<button class="list-btn" data-idx="' + mi + '">📋 详情</button>' +
             '<button class="del-meal-btn" data-idx="' + mi + '">✕</button>' +
           '</div>'
-        ).join('') +
-        '<div class="stats-top">' +
-          '<h3>🏆 最常做的菜</h3>' +
-          top5 +
+        ).join('');
+    }
+
+    // 5g2. 统计视图
+    function renderStats() {
+      if (store.savedMeals.length === 0) {
+        dom.statsContent.innerHTML = '<div class="stats-empty">还没有记录，记录数据后会在这里展示 🏆</div>';
+        return;
+      }
+      const dishCounts = {};
+      store.savedMeals.forEach(m => {
+        m.dishes.forEach(d => {
+          const key = d.emoji + ' ' + d.name;
+          dishCounts[key] = (dishCounts[key] || 0) + 1;
+        });
+      });
+      const top = Object.entries(dishCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const max = top.length > 0 ? top[0][1] : 1;
+      let html = '<div class="stats-card"><h3 style="font-size:16px;font-weight:600;margin-bottom:16px;color:#e67e22;">🏆 最常做的菜</h3>';
+      top.forEach(([name, count], i) => {
+        const pct = (count / max) * 100;
+        html += '<div class="stats-bar-row">' +
+          '<span class="rank">' + (i + 1) + '</span>' +
+          '<span class="name">' + name + '</span>' +
+          '<div class="bar-bg"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+          '<span class="count">' + count + '次</span>' +
         '</div>';
+      });
+      html += '</div>';
+      dom.statsContent.innerHTML = html;
     }
 
     // 5h. 刷新主界面
@@ -1947,18 +2022,21 @@
     //  6. 视图切换（小程序：wx.navigateTo / 条件渲染）
     // ============================================================
     function showView(opts) {
-      const showMain = !opts.admin && !opts.saved;
+      const showMain = !opts.admin && !opts.saved && !opts.stats;
       dom.mainView.style.display = showMain ? '' : 'none';
       dom.adminView.style.display = opts.admin ? '' : 'none';
       dom.savedView.style.display = opts.saved ? '' : 'none';
+      dom.statsView.style.display = opts.stats ? '' : 'none';
       dom.adminToggle.classList.toggle('active', !!opts.admin);
       dom.savedToggle.classList.toggle('active', !!opts.saved);
+      dom.statsToggle.classList.toggle('active', !!opts.stats);
       store.adminOpen = !!opts.admin;
       store.savedOpen = !!opts.saved;
       if (opts.admin) renderAdminList();
       if (opts.saved) renderSavedMeals();
+      if (opts.stats) renderStats();
       // 淡入效果
-      const visible = showMain ? dom.mainView : opts.admin ? dom.adminView : dom.savedView;
+      const visible = showMain ? dom.mainView : opts.admin ? dom.adminView : opts.saved ? dom.savedView : dom.statsView;
       if (visible) {
         visible.classList.remove('view-animate');
         void visible.offsetWidth;
@@ -1975,6 +2053,8 @@
     dom.backFromSaved.onclick = () => showView({});
     dom.adminToggle.onclick = () => showView({ admin: !store.adminOpen });
     dom.backFromAdmin.onclick = () => showView({});
+    dom.statsToggle.onclick = () => showView({ stats: true });
+    dom.backFromStats.onclick = () => showView({});
 
     // 7a2. 添加新菜 —— 展开 / 收缩
     dom.adminFormTitle.addEventListener('click', () => {
